@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:neuronest/theme/app_theme.dart';
 import 'package:neuronest/widgets/widgets.dart';
@@ -168,12 +168,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       child: PrimaryButton(
                         text: 'Get Started',
                         icon: Icons.arrow_forward_rounded,
-                        onPressed: () {
-                          // TODO: replace with Navigator.pushNamed when auth
-                          // screen is implemented.
-                          // ignore: avoid_print
-                          debugPrint('Navigate to Auth');
-                        },
+                        onPressed: () => Navigator.pushNamed(context, '/login'),
                       ),
                     ),
                   ],
