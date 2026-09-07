@@ -57,7 +57,7 @@
     },
     {
       "name": "code_assets",
-      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/code_assets-2.0.0",
+      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/code_assets-1.2.1",
       "packageUri": "lib/",
       "languageVersion": "3.10"
     },
@@ -102,6 +102,24 @@
       "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/ffi_leak_tracker-0.1.2",
       "packageUri": "lib/",
       "languageVersion": "3.10"
+    },
+    {
+      "name": "firebase_auth",
+      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/firebase_auth-6.6.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
+      "name": "firebase_auth_platform_interface",
+      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/firebase_auth_platform_interface-9.0.7",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
+      "name": "firebase_auth_web",
+      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/firebase_auth_web-6.2.7",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
     },
     {
       "name": "firebase_core",
@@ -219,7 +237,7 @@
     },
     {
       "name": "hooks",
-      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/hooks-2.2.0",
+      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/hooks-2.0.2",
       "packageUri": "lib/",
       "languageVersion": "3.10"
     },
@@ -297,13 +315,13 @@
     },
     {
       "name": "meta",
-      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/meta-1.19.0",
+      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/meta-1.18.3",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
     {
       "name": "objective_c",
-      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/objective_c-9.6.0",
+      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/objective_c-9.5.0",
       "packageUri": "lib/",
       "languageVersion": "3.10"
     },
@@ -375,9 +393,9 @@
     },
     {
       "name": "platform",
-      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/platform-3.1.6",
+      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/platform-3.2.0",
       "packageUri": "lib/",
-      "languageVersion": "3.2"
+      "languageVersion": "3.10"
     },
     {
       "name": "plugin_platform_interface",
@@ -393,7 +411,7 @@
     },
     {
       "name": "record_use",
-      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/record_use-1.1.1",
+      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/record_use-0.6.0",
       "packageUri": "lib/",
       "languageVersion": "3.10"
     },
@@ -501,7 +519,7 @@
     },
     {
       "name": "vector_math",
-      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/vector_math-2.4.2",
+      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/vector_math-2.4.0",
       "packageUri": "lib/",
       "languageVersion": "3.10"
     },

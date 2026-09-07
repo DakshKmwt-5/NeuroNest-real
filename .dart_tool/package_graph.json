@@ -8,6 +8,7 @@
       "version": "1.0.0+1",
       "dependencies": [
         "cloud_firestore",
+        "firebase_auth",
         "firebase_core",
         "fl_chart",
         "flutter",
@@ -43,6 +44,18 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "firebase_auth",
+      "version": "6.6.1",
+      "dependencies": [
+        "firebase_auth_platform_interface",
+        "firebase_auth_web",
+        "firebase_core",
+        "firebase_core_platform_interface",
+        "flutter",
+        "meta"
       ]
     },
     {
@@ -139,7 +152,7 @@
     },
     {
       "name": "meta",
-      "version": "1.19.0",
+      "version": "1.18.3",
       "dependencies": []
     },
     {
@@ -160,7 +173,7 @@
     },
     {
       "name": "vector_math",
-      "version": "2.4.2",
+      "version": "2.4.0",
       "dependencies": []
     },
     {
@@ -215,6 +228,106 @@
       ]
     },
     {
+      "name": "firebase_core_platform_interface",
+      "version": "8.1.1",
+      "dependencies": [
+        "collection",
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "firebase_auth_web",
+      "version": "6.2.7",
+      "dependencies": [
+        "firebase_auth_platform_interface",
+        "firebase_core",
+        "firebase_core_web",
+        "flutter",
+        "flutter_web_plugins",
+        "http_parser",
+        "meta",
+        "web"
+      ]
+    },
+    {
+      "name": "firebase_auth_platform_interface",
+      "version": "9.0.7",
+      "dependencies": [
+        "_flutterfire_internals",
+        "collection",
+        "firebase_core",
+        "flutter",
+        "http",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "url_launcher_windows",
+      "version": "3.1.6",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "url_launcher_platform_interface"
+      ]
+    },
+    {
+      "name": "url_launcher_web",
+      "version": "2.4.3",
+      "dependencies": [
+        "flutter",
+        "flutter_web_plugins",
+        "url_launcher_platform_interface",
+        "web"
+      ]
+    },
+    {
+      "name": "url_launcher_platform_interface",
+      "version": "2.3.2",
+      "dependencies": [
+        "flutter",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "url_launcher_macos",
+      "version": "3.2.6",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "url_launcher_platform_interface"
+      ]
+    },
+    {
+      "name": "url_launcher_linux",
+      "version": "3.2.3",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "url_launcher_platform_interface"
+      ]
+    },
+    {
+      "name": "url_launcher_ios",
+      "version": "6.4.2",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "url_launcher_platform_interface"
+      ]
+    },
+    {
+      "name": "url_launcher_android",
+      "version": "6.3.33",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "url_launcher_platform_interface"
+      ]
+    },
+    {
       "name": "firebase_core_web",
       "version": "3.11.0",
       "dependencies": [
@@ -223,16 +336,6 @@
         "flutter_web_plugins",
         "meta",
         "web"
-      ]
-    },
-    {
-      "name": "firebase_core_platform_interface",
-      "version": "8.1.1",
-      "dependencies": [
-        "collection",
-        "flutter",
-        "meta",
-        "plugin_platform_interface"
       ]
     },
     {
@@ -261,16 +364,6 @@
       ]
     },
     {
-      "name": "geolocator_web",
-      "version": "4.1.4",
-      "dependencies": [
-        "flutter",
-        "flutter_web_plugins",
-        "geolocator_platform_interface",
-        "web"
-      ]
-    },
-    {
       "name": "geolocator_linux",
       "version": "0.2.6",
       "dependencies": [
@@ -280,6 +373,24 @@
         "geolocator_platform_interface",
         "gsettings",
         "package_info_plus"
+      ]
+    },
+    {
+      "name": "geolocator_windows",
+      "version": "0.2.5",
+      "dependencies": [
+        "flutter",
+        "geolocator_platform_interface"
+      ]
+    },
+    {
+      "name": "geolocator_web",
+      "version": "4.1.4",
+      "dependencies": [
+        "flutter",
+        "flutter_web_plugins",
+        "geolocator_platform_interface",
+        "web"
       ]
     },
     {
@@ -298,6 +409,16 @@
         "geolocator_platform_interface",
         "meta",
         "uuid"
+      ]
+    },
+    {
+      "name": "geolocator_platform_interface",
+      "version": "4.3.0",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "plugin_platform_interface",
+        "vector_math"
       ]
     },
     {
@@ -412,22 +533,32 @@
       ]
     },
     {
+      "name": "plugin_platform_interface",
+      "version": "2.1.8",
+      "dependencies": [
+        "meta"
+      ]
+    },
+    {
       "name": "web",
       "version": "1.1.1",
       "dependencies": []
+    },
+    {
+      "name": "http_parser",
+      "version": "4.1.2",
+      "dependencies": [
+        "collection",
+        "source_span",
+        "string_scanner",
+        "typed_data"
+      ]
     },
     {
       "name": "flutter_web_plugins",
       "version": "0.0.0",
       "dependencies": [
         "flutter"
-      ]
-    },
-    {
-      "name": "plugin_platform_interface",
-      "version": "2.1.8",
-      "dependencies": [
-        "meta"
       ]
     },
     {
@@ -442,11 +573,53 @@
       ]
     },
     {
+      "name": "package_info_plus",
+      "version": "10.2.1",
+      "dependencies": [
+        "clock",
+        "ffi",
+        "flutter",
+        "flutter_web_plugins",
+        "http",
+        "meta",
+        "package_info_plus_platform_interface",
+        "path",
+        "web",
+        "win32"
+      ]
+    },
+    {
+      "name": "gsettings",
+      "version": "0.2.8",
+      "dependencies": [
+        "dbus",
+        "xdg_directories"
+      ]
+    },
+    {
       "name": "geoclue",
       "version": "0.1.1",
       "dependencies": [
         "dbus",
         "meta"
+      ]
+    },
+    {
+      "name": "dbus",
+      "version": "0.7.15",
+      "dependencies": [
+        "args",
+        "ffi",
+        "meta",
+        "xml"
+      ]
+    },
+    {
+      "name": "uuid",
+      "version": "4.6.0",
+      "dependencies": [
+        "crypto",
+        "fixnum"
       ]
     },
     {
@@ -500,16 +673,6 @@
       ]
     },
     {
-      "name": "http_parser",
-      "version": "4.1.2",
-      "dependencies": [
-        "collection",
-        "source_span",
-        "string_scanner",
-        "typed_data"
-      ]
-    },
-    {
       "name": "typed_data",
       "version": "1.4.0",
       "dependencies": [
@@ -522,13 +685,26 @@
       "dependencies": []
     },
     {
-      "name": "ffi",
-      "version": "2.2.0",
-      "dependencies": []
+      "name": "win32",
+      "version": "6.4.0",
+      "dependencies": [
+        "ffi",
+        "ffi_leak_tracker",
+        "meta"
+      ]
     },
     {
-      "name": "platform",
-      "version": "3.1.6",
+      "name": "package_info_plus_platform_interface",
+      "version": "4.1.0",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "ffi",
+      "version": "2.2.0",
       "dependencies": []
     },
     {
@@ -540,8 +716,34 @@
       ]
     },
     {
+      "name": "xml",
+      "version": "7.0.1",
+      "dependencies": [
+        "collection",
+        "meta",
+        "petitparser"
+      ]
+    },
+    {
+      "name": "args",
+      "version": "2.7.0",
+      "dependencies": []
+    },
+    {
+      "name": "fixnum",
+      "version": "1.1.1",
+      "dependencies": []
+    },
+    {
+      "name": "platform",
+      "version": "3.2.0",
+      "dependencies": [
+        "meta"
+      ]
+    },
+    {
       "name": "objective_c",
-      "version": "9.6.0",
+      "version": "9.5.0",
       "dependencies": [
         "code_assets",
         "collection",
@@ -575,6 +777,21 @@
       ]
     },
     {
+      "name": "ffi_leak_tracker",
+      "version": "0.1.2",
+      "dependencies": [
+        "ffi"
+      ]
+    },
+    {
+      "name": "petitparser",
+      "version": "7.0.2",
+      "dependencies": [
+        "collection",
+        "meta"
+      ]
+    },
+    {
       "name": "pub_semver",
       "version": "2.2.1",
       "dependencies": [
@@ -588,11 +805,12 @@
     },
     {
       "name": "hooks",
-      "version": "2.2.0",
+      "version": "2.0.2",
       "dependencies": [
         "collection",
         "crypto",
         "logging",
+        "meta",
         "pub_semver",
         "record_use",
         "yaml"
@@ -600,11 +818,10 @@
     },
     {
       "name": "code_assets",
-      "version": "2.0.0",
+      "version": "1.2.1",
       "dependencies": [
         "collection",
-        "hooks",
-        "logging"
+        "hooks"
       ]
     },
     {
@@ -622,11 +839,6 @@
       ]
     },
     {
-      "name": "args",
-      "version": "2.7.0",
-      "dependencies": []
-    },
-    {
       "name": "yaml",
       "version": "3.1.4",
       "dependencies": [
@@ -637,181 +849,11 @@
     },
     {
       "name": "record_use",
-      "version": "1.1.1",
+      "version": "0.6.0",
       "dependencies": [
         "collection",
         "meta",
         "pub_semver"
-      ]
-    },
-    {
-      "name": "url_launcher_platform_interface",
-      "version": "2.3.2",
-      "dependencies": [
-        "flutter",
-        "plugin_platform_interface"
-      ]
-    },
-    {
-      "name": "geolocator_windows",
-      "version": "0.2.5",
-      "dependencies": [
-        "flutter",
-        "geolocator_platform_interface"
-      ]
-    },
-    {
-      "name": "package_info_plus",
-      "version": "10.2.1",
-      "dependencies": [
-        "clock",
-        "ffi",
-        "flutter",
-        "flutter_web_plugins",
-        "http",
-        "meta",
-        "package_info_plus_platform_interface",
-        "path",
-        "web",
-        "win32"
-      ]
-    },
-    {
-      "name": "package_info_plus_platform_interface",
-      "version": "4.1.0",
-      "dependencies": [
-        "flutter",
-        "meta",
-        "plugin_platform_interface"
-      ]
-    },
-    {
-      "name": "gsettings",
-      "version": "0.2.8",
-      "dependencies": [
-        "dbus",
-        "xdg_directories"
-      ]
-    },
-    {
-      "name": "win32",
-      "version": "6.4.0",
-      "dependencies": [
-        "ffi",
-        "ffi_leak_tracker",
-        "meta"
-      ]
-    },
-    {
-      "name": "ffi_leak_tracker",
-      "version": "0.1.2",
-      "dependencies": [
-        "ffi"
-      ]
-    },
-    {
-      "name": "url_launcher_linux",
-      "version": "3.2.3",
-      "dependencies": [
-        "flutter",
-        "meta",
-        "url_launcher_platform_interface"
-      ]
-    },
-    {
-      "name": "url_launcher_windows",
-      "version": "3.1.6",
-      "dependencies": [
-        "flutter",
-        "meta",
-        "url_launcher_platform_interface"
-      ]
-    },
-    {
-      "name": "geolocator_platform_interface",
-      "version": "4.3.0",
-      "dependencies": [
-        "flutter",
-        "meta",
-        "plugin_platform_interface",
-        "vector_math"
-      ]
-    },
-    {
-      "name": "url_launcher_macos",
-      "version": "3.2.6",
-      "dependencies": [
-        "flutter",
-        "meta",
-        "url_launcher_platform_interface"
-      ]
-    },
-    {
-      "name": "dbus",
-      "version": "0.7.15",
-      "dependencies": [
-        "args",
-        "ffi",
-        "meta",
-        "xml"
-      ]
-    },
-    {
-      "name": "xml",
-      "version": "7.0.1",
-      "dependencies": [
-        "collection",
-        "meta",
-        "petitparser"
-      ]
-    },
-    {
-      "name": "petitparser",
-      "version": "7.0.2",
-      "dependencies": [
-        "collection",
-        "meta"
-      ]
-    },
-    {
-      "name": "url_launcher_web",
-      "version": "2.4.3",
-      "dependencies": [
-        "flutter",
-        "flutter_web_plugins",
-        "url_launcher_platform_interface",
-        "web"
-      ]
-    },
-    {
-      "name": "url_launcher_ios",
-      "version": "6.4.2",
-      "dependencies": [
-        "flutter",
-        "meta",
-        "url_launcher_platform_interface"
-      ]
-    },
-    {
-      "name": "uuid",
-      "version": "4.6.0",
-      "dependencies": [
-        "crypto",
-        "fixnum"
-      ]
-    },
-    {
-      "name": "fixnum",
-      "version": "1.1.1",
-      "dependencies": []
-    },
-    {
-      "name": "url_launcher_android",
-      "version": "6.3.33",
-      "dependencies": [
-        "flutter",
-        "meta",
-        "url_launcher_platform_interface"
       ]
     }
   ],

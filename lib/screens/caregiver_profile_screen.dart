@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:neuronest/theme/app_theme.dart';
@@ -25,10 +27,65 @@ class CaregiverProfileScreen extends StatefulWidget {
 class _CaregiverProfileScreenState extends State<CaregiverProfileScreen> {
   // ── Controllers ───────────────────────────────────────────────────────────
   final _formKey          = GlobalKey<FormState>();
-  final _usernameCtrl     = TextEditingController(text: 'caregiver_user');
-  final _relationCtrl     = TextEditingController(text: 'Son');
+  final _usernameCtrl     = TextEditingController();
+  final _relationCtrl     = TextEditingController();
   final _phoneCtrl        = TextEditingController();
   final _emailCtrl        = TextEditingController();
+
+  String _displayName = 'Caregiver';
+  String _role = 'Caregiver';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+        var doc = await docRef.get();
+        if (!doc.exists) {
+          final defaultUsername = user.email?.split('@').first ?? 'caregiver';
+          await docRef.set({
+            'username': defaultUsername,
+            'fullName': user.displayName ?? defaultUsername,
+            'role': 'Caregiver',
+            'createdAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+          doc = await docRef.get();
+        }
+
+        if (doc.exists && doc.data() != null) {
+          final data = doc.data()!;
+          final String fullName = data['fullName'] ?? 'Not entered';
+          final String username = data['username'] ?? 'Not entered';
+          final String role = data['role'] ?? 'Caregiver';
+          final String phone = data['phone'] ?? data['mobile'] ?? 'Not entered';
+          final String email = data['email'] ?? user.email ?? 'Not entered';
+          final String relation = data['relation'] ?? 'Not entered';
+
+          if (mounted) {
+            setState(() {
+              _displayName = fullName != 'Not entered' && fullName.isNotEmpty
+                  ? fullName
+                  : (username != 'Not entered' && username.isNotEmpty ? username : 'Caregiver');
+              _role = role;
+              _usernameCtrl.text = username;
+              _relationCtrl.text = relation;
+              _phoneCtrl.text = phone;
+              _emailCtrl.text = email;
+            });
+          }
+          return;
+        }
+      } catch (e) {
+        debugPrint('Error loading caregiver profile: $e');
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -117,11 +174,14 @@ class _CaregiverProfileScreenState extends State<CaregiverProfileScreen> {
               const SizedBox(height: 20),
 
               // 2 ── Name + role badge ────────────────────────────────────────
-              const _ProfileNameBadge(),
+              _ProfileNameBadge(
+                displayName: _displayName,
+                role: _role,
+              ),
               const SizedBox(height: 32),
 
               // 3 ── Section label ────────────────────────────────────────────
-              _SectionLabel(label: 'Account Details'),
+              const _SectionLabel(label: 'Account Details'),
               const SizedBox(height: 16),
 
               // Username
@@ -153,7 +213,7 @@ class _CaregiverProfileScreenState extends State<CaregiverProfileScreen> {
               const SizedBox(height: 20),
 
               // 4 ── Section label ────────────────────────────────────────────
-              _SectionLabel(label: 'Contact Information'),
+              const _SectionLabel(label: 'Contact Information'),
               const SizedBox(height: 16),
 
               // Phone
@@ -293,14 +353,20 @@ class _ProfileAvatar extends StatelessWidget {
 
 /// Displays the caregiver's display name and a "Caregiver" role pill.
 class _ProfileNameBadge extends StatelessWidget {
-  const _ProfileNameBadge();
+  final String displayName;
+  final String role;
+
+  const _ProfileNameBadge({
+    required this.displayName,
+    required this.role,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Text(
-          'Caregiver User',
+          displayName,
           textAlign: TextAlign.center,
           style: GoogleFonts.baloo2(
             fontSize: 22,
@@ -328,7 +394,7 @@ class _ProfileNameBadge extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                'Caregiver',
+                role,
                 style: GoogleFonts.baloo2(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,

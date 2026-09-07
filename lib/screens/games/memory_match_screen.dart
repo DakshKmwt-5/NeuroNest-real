@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:neuronest/screens/games/grocery_basket_screen.dart';
+import 'package:neuronest/services/game_score_service.dart';
 import 'package:neuronest/theme/app_theme.dart';
 import 'package:neuronest/widgets/widgets.dart';
 
@@ -283,7 +284,21 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                 PrimaryButton(
                   text: 'Next Game',
                   icon: Icons.arrow_forward_rounded,
-                  onPressed: () {
+                  onPressed: () async {
+                    print("--- NEXT GAME CLICKED, SAVING SCORE ---");
+                    try {
+                      await GameScoreService().saveScore(
+                        gameName: 'Memory Match',
+                        score: score,
+                        maxScore: 100,
+                        timeElapsed: timeElapsed,
+                      );
+                      print("--- SCORE SAVED SUCCESSFULLY ---");
+                    } catch (e) {
+                      print("--- ERROR SAVING SCORE: $e ---");
+                    }
+
+                    if (!mounted) return;
                     Navigator.of(dialogContext).pop();
                     // Push Grocery Basket as the next game in the sequence
                     Navigator.of(context).pushReplacement(

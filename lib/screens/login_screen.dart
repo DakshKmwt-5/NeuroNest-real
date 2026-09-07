@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:neuronest/screens/signup_screen.dart';
+import 'package:neuronest/services/auth_service.dart';
 import 'package:neuronest/theme/app_theme.dart';
 import 'package:neuronest/widgets/widgets.dart';
 
@@ -31,6 +33,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _formKey           = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool  _isLoading          = false;
 
   // ── Animation ──────────────────────────────────────────────────────────────
   late final AnimationController _anim;
@@ -68,13 +71,73 @@ class _LoginScreenState extends State<LoginScreen>
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
-  void _onLogin() {
-    if (_formKey.currentState?.validate() ?? false) {
-      debugPrint('Login as ${isPatient ? 'Patient' : 'Caregiver'}');
-      if (isPatient) {
-        Navigator.of(context).pushReplacementNamed('/patient_dashboard');
-      } else {
-        Navigator.of(context).pushReplacementNamed('/caregiver_dashboard');
+  Future<void> _onLogin() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    setState(() => _isLoading = true);
+
+    try {
+      final credential = await AuthService().loginUser(
+        username: username,
+        password: password,
+      );
+
+      if (!mounted) return;
+
+      if (credential.user != null) {
+        final role = await AuthService().getUserRole(credential.user!.uid);
+        if (!mounted) return;
+
+        if (role == 'Caregiver' || (!isPatient && role == null)) {
+          Navigator.of(context).pushReplacementNamed('/caregiver_dashboard');
+        } else {
+          Navigator.of(context).pushReplacementNamed('/patient_dashboard');
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.message ?? 'Invalid username or password',
+            style: GoogleFonts.baloo2(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Login error: $e',
+            style: GoogleFonts.baloo2(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -83,8 +146,6 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
-    final mq = MediaQuery.of(context);
-
     return Scaffold(
       body: Stack(
         children: [
@@ -99,13 +160,9 @@ class _LoginScreenState extends State<LoginScreen>
                 position: _slideUp,
                 child: Form(
                   key: _formKey,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      24,
-                      mq.size.height * 0.04,
-                      24,
-                      24,
-                    ),
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -117,12 +174,12 @@ class _LoginScreenState extends State<LoginScreen>
                           ),
                         ),
 
-                        SizedBox(height: mq.size.height * 0.04),
+                        const SizedBox(height: 16),
 
                         // ── Header ─────────────────────────────────────────────
                         const _LoginHeader(),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 24),
 
                         // ── Role toggle ────────────────────────────────────────
                         _RoleToggle(
@@ -131,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen>
                               setState(() => isPatient = value),
                         ),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 24),
 
                         // ── Username field ─────────────────────────────────────
                         CustomTextField(
@@ -147,7 +204,7 @@ class _LoginScreenState extends State<LoginScreen>
                           semanticLabel: 'Username field',
                         ),
 
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
 
                         // ── Password field ─────────────────────────────────────
                         CustomTextField(
@@ -165,7 +222,7 @@ class _LoginScreenState extends State<LoginScreen>
                           semanticLabel: 'Password field',
                         ),
 
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
 
                         // ── Forgot password link ───────────────────────────────
                         Align(
@@ -176,7 +233,7 @@ class _LoginScreenState extends State<LoginScreen>
                             style: TextButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 4,
-                                vertical: 8,
+                                vertical: 4,
                               ),
                               minimumSize: const Size(
                                 kMinTouchTarget,
@@ -194,8 +251,7 @@ class _LoginScreenState extends State<LoginScreen>
                           ),
                         ),
 
-                        // ── Push CTA to bottom ────────────────────────────────
-                        const Spacer(),
+                        const SizedBox(height: 12),
 
                         // ── Role context hint ─────────────────────────────────
                         _RoleHintBanner(isPatient: isPatient),
@@ -206,12 +262,13 @@ class _LoginScreenState extends State<LoginScreen>
                         PrimaryButton(
                           text: 'Login',
                           icon: Icons.login_rounded,
-                          onPressed: _onLogin,
+                          isLoading: _isLoading,
+                          onPressed: _isLoading ? null : _onLogin,
                           semanticLabel:
                               'Login as ${isPatient ? 'Patient' : 'Caregiver'}',
                         ),
 
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
 
                         // ── Sign Up Navigation ────────────────────────────────
                         Center(

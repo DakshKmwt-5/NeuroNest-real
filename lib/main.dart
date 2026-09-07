@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:neuronest/firebase_options.dart';
 import 'package:neuronest/screens/caregiver_dashboard_screen.dart';
 import 'package:neuronest/screens/login_screen.dart';
 import 'package:neuronest/screens/onboarding_screen.dart';
 import 'package:neuronest/screens/patient_dashboard_screen.dart';
 import 'package:neuronest/theme/app_theme.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Entry point
@@ -15,9 +16,11 @@ import 'package:firebase_core/firebase_core.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   } catch (e) {
-    debugPrint('Firebase init failed (likely missing web config): $e');
+    debugPrint('Firebase init failed: $e');
   }
 
   // Lock to portrait while the UI layer is being built out.

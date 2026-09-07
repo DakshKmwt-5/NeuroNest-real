@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:neuronest/screens/activity_tab_content.dart';
@@ -14,12 +16,6 @@ import 'package:neuronest/theme/app_theme.dart';
 // ──────────────────────────────────────────────────────────────────────────────
 
 /// Primary home screen for the Caregiver role.
-///
-/// Layout:
-///   • [Scaffold] with [AppColors.background]
-///   • Header row: notification bell | "Caregiver Hub" title | avatar
-///   • [Expanded] body showing active tab content
-///   • Custom 5-tab [_CaregiverBottomNavBar]
 class CaregiverDashboardScreen extends StatefulWidget {
   const CaregiverDashboardScreen({super.key});
 
@@ -65,66 +61,306 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
     super.dispose();
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────────
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeIn,
-          child: SlideTransition(
-            position: _slideUp,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // ── Header ──────────────────────────────────────────────────
-                _CaregiverHeader(selectedIndex: _selectedIndex),
+  /// Links a patient by username in Firestore
+  Future<void> _linkPatientByUsername(String username) async {
+    final trimmed = username.trim();
+    if (trimmed.isEmpty) return;
 
-                // ── Main content ─────────────────────────────────────────────
+    final caregiverUid = FirebaseAuth.instance.currentUser?.uid;
+    if (caregiverUid == null) return;
+
+    try {
+      // 1. Query Firestore users collection where username matches and role is 'Patient'
+      final query = await FirebaseFirestore.instance
+          .collection('users')
+          .where('username', isEqualTo: trimmed)
+          .where('role', isEqualTo: 'Patient')
+          .limit(1)
+          .get();
+
+      DocumentSnapshot<Map<String, dynamic>>? patientDoc;
+      if (query.docs.isNotEmpty) {
+        patientDoc = query.docs.first;
+      } else {
+        // Fallback: check case-insensitive match for role 'Patient'
+        final allPatients = await FirebaseFirestore.instance
+            .collection('users')
+            .where('role', isEqualTo: 'Patient')
+            .get();
+
+        final match = allPatients.docs.where((doc) {
+          final u = (doc.data()['username'] as String?)?.trim();
+          return u != null && u.toLowerCase() == trimmed.toLowerCase();
+        }).firstOrNull;
+
+        if (match != null) {
+          patientDoc = match;
+        }
+      }
+
+      if (patientDoc == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'No patient found with username "$trimmed". Please ensure the patient account has role "Patient".',
+                style: GoogleFonts.baloo2(fontWeight: FontWeight.w600),
+              ),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
+        return;
+      }
+
+      final String patientUid = patientDoc.id;
+      final String patientUsername = patientDoc.data()?['username'] ?? trimmed;
+      final String patientName = patientDoc.data()?['fullName'] ?? patientUsername;
+
+      // 2. Save linked patient's uid to caregiver document
+      await FirebaseFirestore.instance.collection('users').doc(caregiverUid).set({
+        'linkedPatientUid': patientUid,
+        'linkedPatientUsername': patientUsername,
+        'linkedPatientName': patientName,
+      }, SetOptions(merge: true));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Successfully linked to patient "$patientName" (@$patientUsername)!',
+              style: GoogleFonts.baloo2(fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error linking patient: $e',
+              style: GoogleFonts.baloo2(fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Prompts dialog to link a patient by username
+  void _showLinkPatientDialog({String? currentPatientUsername}) {
+    final controller = TextEditingController(text: currentPatientUsername ?? '');
+    bool isSubmitting = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            backgroundColor: AppColors.surface,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primarySurface,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.person_add_rounded, color: AppColors.primary),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 280),
-                    transitionBuilder: (child, anim) => FadeTransition(
-                      opacity: anim,
-                      child: child,
+                  child: Text(
+                    currentPatientUsername != null ? 'Change Patient' : 'Add / Link Patient',
+                    style: GoogleFonts.baloo2(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.text,
                     ),
-                    child: _selectedIndex == 0
-                        ? const OverviewTabContent(
-                            key: ValueKey('overview'),
-                          )
-                        : _selectedIndex == 1
-                            ? const ActivityTabContent(
-                                key: ValueKey('activity'),
-                              )
-                            : _selectedIndex == 2
-                                ? const ReminderTabContent(
-                                    key: ValueKey('reminder'),
-                                  )
-                                : _selectedIndex == 3
-                                    ? const SettingsTabContent(
-                                        key: ValueKey('settings'),
-                                      )
-                                    : const HelpSupportTabContent(
-                                        key: ValueKey('help_support'),
-                                      ),
                   ),
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-      // ── Custom bottom nav ────────────────────────────────────────────────
-      bottomNavigationBar: _CaregiverBottomNavBar(
-        selectedIndex: _selectedIndex,
-        onTap: (i) {
-          if (i != _selectedIndex) {
-            setState(() => _selectedIndex = i);
-            _anim..reset()..forward();
-          }
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Enter the patient\'s registered username to link their game scores and profile data.',
+                  style: GoogleFonts.baloo2(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    labelText: 'Patient Username',
+                    hintText: 'e.g. robert_smith',
+                    prefixIcon: const Icon(Icons.alternate_email_rounded, color: AppColors.primary),
+                    filled: true,
+                    fillColor: AppColors.background,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: AppColors.outline),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: isSubmitting ? null : () => Navigator.pop(dialogContext),
+                child: Text(
+                  'Cancel',
+                  style: GoogleFonts.baloo2(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: isSubmitting
+                    ? null
+                    : () async {
+                        final username = controller.text.trim();
+                        if (username.isEmpty) return;
+                        setDialogState(() => isSubmitting = true);
+                        Navigator.pop(dialogContext);
+                        await _linkPatientByUsername(username);
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                ),
+                child: isSubmitting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : Text(
+                        'Link Patient',
+                        style: GoogleFonts.baloo2(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+              ),
+            ],
+          );
         },
       ),
+    );
+  }
+
+  // ── Build ──────────────────────────────────────────────────────────────────
+  @override
+  Widget build(BuildContext context) {
+    final caregiverUid = FirebaseAuth.instance.currentUser?.uid;
+
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: caregiverUid != null
+          ? FirebaseFirestore.instance.collection('users').doc(caregiverUid).snapshots()
+          : null,
+      builder: (context, caregiverSnapshot) {
+        final caregiverData = caregiverSnapshot.data?.data();
+        final String? linkedPatientUid = caregiverData?['linkedPatientUid'] as String?;
+        final String? linkedPatientUsername = caregiverData?['linkedPatientUsername'] as String?;
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: FadeTransition(
+              opacity: _fadeIn,
+              child: SlideTransition(
+                position: _slideUp,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ── Header ──────────────────────────────────────────────
+                    _CaregiverHeader(
+                      selectedIndex: _selectedIndex,
+                      linkedPatientUsername: linkedPatientUsername,
+                      onAddPatientPressed: () => _showLinkPatientDialog(
+                        currentPatientUsername: linkedPatientUsername,
+                      ),
+                    ),
+
+                    // ── Main content ─────────────────────────────────────────
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 280),
+                        transitionBuilder: (child, anim) => FadeTransition(
+                          opacity: anim,
+                          child: child,
+                        ),
+                        child: _selectedIndex == 0
+                            ? OverviewTabContent(
+                                key: const ValueKey('overview'),
+                                linkedPatientUid: linkedPatientUid,
+                                onLinkPatient: (username) => _linkPatientByUsername(username),
+                                onShowLinkDialog: () => _showLinkPatientDialog(
+                                  currentPatientUsername: linkedPatientUsername,
+                                ),
+                              )
+                            : _selectedIndex == 1
+                                ? ActivityTabContent(
+                                    key: const ValueKey('activity'),
+                                    targetUserId: linkedPatientUid,
+                                    onShowLinkDialog: () => _showLinkPatientDialog(
+                                      currentPatientUsername: linkedPatientUsername,
+                                    ),
+                                  )
+                                : _selectedIndex == 2
+                                    ? const ReminderTabContent(
+                                        key: ValueKey('reminder'),
+                                      )
+                                    : _selectedIndex == 3
+                                        ? const SettingsTabContent(
+                                            key: ValueKey('settings'),
+                                          )
+                                        : const HelpSupportTabContent(
+                                            key: ValueKey('help_support'),
+                                          ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // ── Custom bottom nav ────────────────────────────────────────────
+          bottomNavigationBar: _CaregiverBottomNavBar(
+            selectedIndex: _selectedIndex,
+            onTap: (i) {
+              if (i != _selectedIndex) {
+                setState(() => _selectedIndex = i);
+                _anim
+                  ..reset()
+                  ..forward();
+              }
+            },
+          ),
+        );
+      },
     );
   }
 }
@@ -134,10 +370,17 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
 // ──────────────────────────────────────────────────────────────────────────────
 
 /// Top navigation row:
-///   [NotificationIcon] | [Expanded "Caregiver Hub"] | [AvatarIcon]
+///   [NotificationIcon] | [Expanded "Caregiver Hub"] | [AddPatientButton] | [AvatarIcon]
 class _CaregiverHeader extends StatelessWidget {
-  const _CaregiverHeader({required this.selectedIndex});
+  const _CaregiverHeader({
+    required this.selectedIndex,
+    this.linkedPatientUsername,
+    this.onAddPatientPressed,
+  });
+
   final int selectedIndex;
+  final String? linkedPatientUsername;
+  final VoidCallback? onAddPatientPressed;
 
   static const _tabTitles = [
     'Caregiver Hub',
@@ -205,6 +448,27 @@ class _CaregiverHeader extends StatelessWidget {
               ),
             ),
           ),
+
+          // ── Link / Add Patient quick action ──────────────────────────────
+          if (onAddPatientPressed != null)
+            Semantics(
+              button: true,
+              label: linkedPatientUsername != null ? 'Change Patient' : 'Add Patient',
+              child: IconButton(
+                onPressed: onAddPatientPressed,
+                icon: Icon(
+                  linkedPatientUsername != null
+                      ? Icons.person_search_rounded
+                      : Icons.person_add_alt_1_rounded,
+                  color: AppColors.primary,
+                  size: 24,
+                ),
+                tooltip: linkedPatientUsername != null
+                    ? 'Linked: @$linkedPatientUsername (Tap to change)'
+                    : 'Add / Link Patient',
+                splashRadius: 22,
+              ),
+            ),
 
           // ── Right: profile avatar ─────────────────────────────────────────
           Semantics(

@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:neuronest/screens/caregiver_dashboard_screen.dart';
 import 'package:neuronest/screens/patient_dashboard_screen.dart';
+import 'package:neuronest/services/auth_service.dart';
 import 'package:neuronest/theme/app_theme.dart';
 import 'package:neuronest/widgets/widgets.dart';
 
@@ -18,25 +20,26 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   String selectedRole = 'Caregiver';
+  bool isLoading = false;
 
   @override
   void dispose() {
     nameController.dispose();
-    emailController.dispose();
+    usernameController.dispose();
     passwordController.dispose();
     super.dispose();
   }
 
-  void _onCreateAccount() {
+  Future<void> _onCreateAccount() async {
     final name = nameController.text.trim();
-    final email = emailController.text.trim();
+    final username = usernameController.text.trim();
     final password = passwordController.text.trim();
 
-    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+    if (name.isEmpty || username.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -57,16 +60,92 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
-    if (selectedRole == 'Caregiver') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const CaregiverDashboardScreen()),
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Password must be at least 6 characters',
+            style: GoogleFonts.baloo2(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const PatientDashboardScreen()),
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      await AuthService().signUpUser(
+        username: username,
+        password: password,
+        role: selectedRole,
+        fullName: name,
       );
+
+      if (!mounted) return;
+
+      if (selectedRole == 'Caregiver') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const CaregiverDashboardScreen()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const PatientDashboardScreen()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.message ?? 'Sign up failed. Please try another username.',
+            style: GoogleFonts.baloo2(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'An error occurred: $e',
+            style: GoogleFonts.baloo2(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
@@ -84,7 +163,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 6.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -92,33 +172,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
               Text(
                 'Create New Account',
                 style: GoogleFonts.baloo2(
-                  fontSize: 30,
+                  fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: AppColors.text,
                   height: 1.2,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 'Join NeuroNest to personalize your care and cognitive exercises.',
                 style: GoogleFonts.baloo2(
-                  fontSize: 15,
+                  fontSize: 14,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textSecondary,
                 ),
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 20),
 
               // Role Selection Header
               Text(
                 'I am a:',
                 style: GoogleFonts.baloo2(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: AppColors.text,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
 
               // Role Selection Cards
               Row(
@@ -150,7 +230,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 20),
 
               // Input Fields
               CustomTextField(
@@ -160,16 +240,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 keyboardType: TextInputType.text,
                 prefixIcon: Icons.person_outline_rounded,
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
 
               CustomTextField(
-                label: 'Email Address',
-                hint: 'e.g. john@example.com',
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-                prefixIcon: Icons.email_outlined,
+                label: 'Username',
+                hint: 'e.g. johndoe',
+                controller: usernameController,
+                keyboardType: TextInputType.text,
+                prefixIcon: Icons.alternate_email_rounded,
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
 
               CustomTextField(
                 label: 'Password',
@@ -178,15 +258,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 obscureText: true,
                 prefixIcon: Icons.lock_outline_rounded,
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 18),
 
               // Submit Button
               PrimaryButton(
                 text: 'Create Account',
                 icon: Icons.arrow_forward_rounded,
-                onPressed: _onCreateAccount,
+                isLoading: isLoading,
+                onPressed: isLoading ? null : _onCreateAccount,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
 
               // Footer
               Center(
@@ -196,7 +277,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     text: TextSpan(
                       text: 'Already have an account? ',
                       style: GoogleFonts.baloo2(
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: AppColors.textSecondary,
                       ),
@@ -204,7 +285,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         TextSpan(
                           text: 'Log in',
                           style: GoogleFonts.baloo2(
-                            fontSize: 15,
+                            fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: AppColors.primary,
                             decoration: TextDecoration.underline,
@@ -215,7 +296,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 6),
             ],
           ),
         ),
@@ -247,7 +328,7 @@ class _RoleCard extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.surface : AppColors.surface.withAlpha(120),
           borderRadius: BorderRadius.circular(16),
@@ -270,14 +351,14 @@ class _RoleCard extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 36,
+              size: 32,
               color: isSelected ? AppColors.primary : AppColors.textSecondary,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text(
               title,
               style: GoogleFonts.baloo2(
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 color: isSelected ? AppColors.primary : AppColors.textSecondary,
               ),

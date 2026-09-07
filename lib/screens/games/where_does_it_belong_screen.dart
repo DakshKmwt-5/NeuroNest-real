@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:neuronest/screens/games/daily_routine_screen.dart';
+import 'package:neuronest/services/game_score_service.dart';
 import 'package:neuronest/theme/app_theme.dart';
 import 'package:neuronest/widgets/widgets.dart';
 
@@ -201,7 +202,21 @@ class _WhereDoesItBelongScreenState extends State<WhereDoesItBelongScreen> {
                 PrimaryButton(
                   text: 'Next Game',
                   icon: Icons.arrow_forward_rounded,
-                  onPressed: () {
+                  onPressed: () async {
+                    print("--- NEXT GAME CLICKED, SAVING SCORE ---");
+                    try {
+                      await GameScoreService().saveScore(
+                        gameName: 'Where Does It Belong',
+                        score: score,
+                        maxScore: 6,
+                        timeElapsed: timeElapsed,
+                      );
+                      print("--- SCORE SAVED SUCCESSFULLY ---");
+                    } catch (e) {
+                      print("--- ERROR SAVING SCORE: $e ---");
+                    }
+
+                    if (!mounted) return;
                     Navigator.of(dialogContext).pop();
                     // Push Daily Routine as the next game
                     Navigator.of(context).pushReplacement(

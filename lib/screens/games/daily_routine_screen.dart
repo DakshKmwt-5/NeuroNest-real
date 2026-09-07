@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:neuronest/screens/games/sort_objects_screen.dart';
+import 'package:neuronest/services/game_score_service.dart';
 import 'package:neuronest/theme/app_theme.dart';
 import 'package:neuronest/widgets/widgets.dart';
 
@@ -266,7 +267,21 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
                 PrimaryButton(
                   text: 'Next Game',
                   icon: Icons.arrow_forward_rounded,
-                  onPressed: () {
+                  onPressed: () async {
+                    print("--- NEXT GAME CLICKED, SAVING SCORE ---");
+                    try {
+                      await GameScoreService().saveScore(
+                        gameName: 'Daily Routine',
+                        score: score,
+                        maxScore: 100,
+                        timeElapsed: timeElapsed,
+                      );
+                      print("--- SCORE SAVED SUCCESSFULLY ---");
+                    } catch (e) {
+                      print("--- ERROR SAVING SCORE: $e ---");
+                    }
+
+                    if (!mounted) return;
                     Navigator.of(dialogContext).pop();
                     Navigator.pushReplacement(
                       context,

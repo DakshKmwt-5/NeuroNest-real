@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:neuronest/screens/games/memory_match_screen.dart';
@@ -126,80 +128,102 @@ class _HomeTab extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// 1. _SimpleHeader  – greeting + avatar ONLY (no hamburger, no bell)
+// 1. _SimpleHeader  – dynamic greeting + avatar from Firestore
 // ──────────────────────────────────────────────────────────────────────────────
 class _SimpleHeader extends StatelessWidget {
   const _SimpleHeader();
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // Greeting column
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Hello, Patient 👋',
-                style: GoogleFonts.baloo2(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.text,
-                  height: 1.1,
-                  letterSpacing: -0.4,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                _supportingMessage(),
-                style: GoogleFonts.baloo2(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textSecondary,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 16),
-        // Avatar
-        Semantics(
-          button: true,
-          label: 'View profile',
-          child: InkWell(
-            onTap: () => debugPrint('Avatar tapped'),
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              width: 54,
-              height: 54,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.primary, Color(0xFF2A6039)],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withAlpha(65),
-                    blurRadius: 14,
-                    offset: const Offset(0, 5),
-                    spreadRadius: -3,
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: uid != null
+          ? FirebaseFirestore.instance.collection('users').doc(uid).get()
+          : null,
+      builder: (context, snapshot) {
+        final data = snapshot.data?.data();
+        final rawName = data?['fullName'] as String? ??
+            data?['username'] as String? ??
+            'Patient';
+        final firstName = rawName.trim().isNotEmpty
+            ? rawName.trim().split(' ').first
+            : 'Patient';
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Greeting column
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hello, $firstName 👋',
+                    style: GoogleFonts.baloo2(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.text,
+                      height: 1.1,
+                      letterSpacing: -0.4,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _supportingMessage(),
+                    style: GoogleFonts.baloo2(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.person_rounded,
-                color: AppColors.background,
-                size: 28,
+            ),
+            const SizedBox(width: 16),
+            // Avatar
+            Semantics(
+              button: true,
+              label: 'View profile',
+              child: InkWell(
+                onTap: () => debugPrint('Avatar tapped'),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppColors.primary, Color(0xFF2A6039)],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withAlpha(65),
+                        blurRadius: 14,
+                        offset: const Offset(0, 5),
+                        spreadRadius: -3,
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      firstName.isNotEmpty ? firstName[0].toUpperCase() : 'P',
+                      style: GoogleFonts.baloo2(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.background,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
@@ -1164,193 +1188,268 @@ class PatientReminderTabContent extends StatelessWidget {
 class PatientProfileTabContent extends StatelessWidget {
   const PatientProfileTabContent({super.key});
 
+  String _formatVal(dynamic val) {
+    if (val == null) return 'Not entered';
+    final str = val.toString().trim();
+    return str.isEmpty ? 'Not entered' : str;
+  }
+
+  Future<DocumentSnapshot<Map<String, dynamic>>?> _fetchUser() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    var doc = await docRef.get();
+    if (!doc.exists) {
+      final defaultUsername = user.email?.split('@').first ?? 'patient';
+      await docRef.set({
+        'username': defaultUsername,
+        'fullName': user.displayName ?? defaultUsername,
+        'role': 'Patient',
+        'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      doc = await docRef.get();
+    }
+    return doc;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // DP Upload Stack
-          Center(
-            child: Stack(
-              children: [
-                const CircleAvatar(
-                  radius: 50,
-                  backgroundColor: AppColors.accent, // #D8C9E8
-                  child: Icon(
-                    Icons.person_rounded,
-                    size: 58,
-                    color: AppColors.primary,
-                  ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.primary,
-                      border: Border.all(color: Colors.white, width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(38),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
+      future: _fetchUser(),
+      builder: (context, snapshot) {
+        final userData = snapshot.data?.data();
+
+        final fullName = _formatVal(userData?['fullName']);
+        final username = _formatVal(userData?['username']);
+        final role = _formatVal(userData?['role']);
+        final phone = _formatVal(userData?['phone'] ?? userData?['mobile']);
+        final altPhone = _formatVal(userData?['altPhone'] ?? userData?['emergencyContact']);
+        final age = _formatVal(userData?['age']);
+        final address = _formatVal(userData?['address']);
+
+        final displayTitle = fullName != 'Not entered'
+            ? fullName
+            : (username != 'Not entered' ? username : 'Patient Profile');
+        final idSuffix = uid != null && uid.length >= 6
+            ? uid.substring(0, 6).toUpperCase()
+            : (uid?.toUpperCase() ?? 'NN-7291');
+
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // DP Upload Stack
+              Center(
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: AppColors.accent, // #D8C9E8
+                      child: Text(
+                        displayTitle.isNotEmpty && displayTitle != 'Not entered'
+                            ? displayTitle[0].toUpperCase()
+                            : '👤',
+                        style: GoogleFonts.baloo2(
+                          fontSize: 38,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
                         ),
-                      ],
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.camera_alt_rounded,
-                      size: 18,
-                      color: Colors.white,
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primary,
+                          border: Border.all(color: Colors.white, width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(38),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt_rounded,
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Robert Smith',
-            style: GoogleFonts.baloo2(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: AppColors.text,
-            ),
-          ),
-          Text(
-            'Patient ID: #NN-7291',
-            style: GoogleFonts.baloo2(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Fields
-          const CustomTextField(
-            label: 'Username',
-            hint: 'Robert Smith',
-            initialValue: 'Robert Smith',
-            prefixIcon: Icons.person_outline_rounded,
-          ),
-          const SizedBox(height: 14),
-          const CustomTextField(
-            label: 'Mobile No.',
-            hint: '+1 (555) 234-5678',
-            initialValue: '+1 (555) 234-5678',
-            keyboardType: TextInputType.phone,
-            prefixIcon: Icons.phone_outlined,
-          ),
-          const SizedBox(height: 14),
-          const CustomTextField(
-            label: 'Alt Mobile No.',
-            hint: '+1 (555) 876-5432',
-            initialValue: '+1 (555) 876-5432',
-            keyboardType: TextInputType.phone,
-            prefixIcon: Icons.phone_iphone_rounded,
-          ),
-          const SizedBox(height: 14),
-          const CustomTextField(
-            label: 'Age',
-            hint: '72',
-            initialValue: '72',
-            keyboardType: TextInputType.number,
-            prefixIcon: Icons.cake_outlined,
-          ),
-          const SizedBox(height: 14),
-          const CustomTextField(
-            label: 'Address',
-            hint: '142 Elm Street, Maplewood, NJ',
-            initialValue: '142 Elm Street, Maplewood, NJ',
-            maxLines: 2,
-            prefixIcon: Icons.home_outlined,
-          ),
-          const SizedBox(height: 20),
-
-          // Settings: Language & Voice
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(15),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: ListTile(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Language & Voice tapped')),
-                );
-              },
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(30),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.record_voice_over_rounded,
-                  color: AppColors.primary,
-                  size: 22,
+                  ],
                 ),
               ),
-              title: Text(
-                'Language & Voice',
+              const SizedBox(height: 12),
+              Text(
+                displayTitle,
                 style: GoogleFonts.baloo2(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
                   color: AppColors.text,
                 ),
               ),
-              trailing: const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Log Out Button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Logged out')),
-                );
-              },
-              icon: const Icon(Icons.logout_rounded, color: Color(0xFFD32F2F)),
-              label: Text(
-                'Log Out',
+              Text(
+                'Patient ID: #$idSuffix • $role',
                 style: GoogleFonts.baloo2(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFFD32F2F),
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
                 ),
               ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFFD32F2F), width: 1.5),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+              const SizedBox(height: 24),
+
+              // Fields with live values & 'Not entered' fallback
+              CustomTextField(
+                key: ValueKey('name_$fullName'),
+                label: 'Full Name',
+                hint: fullName,
+                initialValue: fullName,
+                enabled: false,
+                prefixIcon: Icons.badge_outlined,
+              ),
+              const SizedBox(height: 14),
+              CustomTextField(
+                key: ValueKey('user_$username'),
+                label: 'Username',
+                hint: username,
+                initialValue: username,
+                enabled: false,
+                prefixIcon: Icons.person_outline_rounded,
+              ),
+              const SizedBox(height: 14),
+              CustomTextField(
+                key: ValueKey('phone_$phone'),
+                label: 'Mobile No.',
+                hint: phone,
+                initialValue: phone,
+                enabled: false,
+                keyboardType: TextInputType.phone,
+                prefixIcon: Icons.phone_outlined,
+              ),
+              const SizedBox(height: 14),
+              CustomTextField(
+                key: ValueKey('alt_$altPhone'),
+                label: 'Alt Mobile No. / Emergency Contact',
+                hint: altPhone,
+                initialValue: altPhone,
+                enabled: false,
+                keyboardType: TextInputType.phone,
+                prefixIcon: Icons.phone_iphone_rounded,
+              ),
+              const SizedBox(height: 14),
+              CustomTextField(
+                key: ValueKey('age_$age'),
+                label: 'Age',
+                hint: age,
+                initialValue: age,
+                enabled: false,
+                keyboardType: TextInputType.number,
+                prefixIcon: Icons.cake_outlined,
+              ),
+              const SizedBox(height: 14),
+              CustomTextField(
+                key: ValueKey('addr_$address'),
+                label: 'Address',
+                hint: address,
+                initialValue: address,
+                enabled: false,
+                maxLines: 2,
+                prefixIcon: Icons.home_outlined,
+              ),
+              const SizedBox(height: 20),
+
+              // Settings: Language & Voice
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Language & Voice tapped')),
+                    );
+                  },
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.record_voice_over_rounded,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
+                  ),
+                  title: Text(
+                    'Language & Voice',
+                    style: GoogleFonts.baloo2(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.text,
+                    ),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(height: 24),
+
+              // Log Out Button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    await FirebaseAuth.instance.signOut();
+                    if (!context.mounted) return;
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      '/login',
+                      (route) => false,
+                    );
+                  },
+                  icon: const Icon(Icons.logout_rounded, color: Color(0xFFD32F2F)),
+                  label: Text(
+                    'Log Out',
+                    style: GoogleFonts.baloo2(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFFD32F2F),
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFD32F2F), width: 1.5),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
