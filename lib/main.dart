@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:neuronest/screens/caregiver_dashboard_screen.dart';
 import 'package:neuronest/screens/login_screen.dart';
 import 'package:neuronest/screens/onboarding_screen.dart';
 import 'package:neuronest/screens/patient_dashboard_screen.dart';
@@ -45,15 +46,16 @@ class NeuroNestApp extends StatelessWidget {
   static const String routeOnboarding           = '/onboarding';
   static const String routeLogin                = '/login';
   static const String routePatientDashboard     = '/dashboard/patient';
-  static const String routePatientDashboardAlt  = '/patient_dashboard'; // canonical alias
+  static const String routePatientDashboardAlt  = '/patient_dashboard';
+  static const String routeCaregiverDashboard   = '/caregiver_dashboard';
 
   static Map<String, WidgetBuilder> get _routes => {
         routeSplash:              (_) => const SplashScreen(),
         routeOnboarding:          (_) => const OnboardingScreen(),
         routeLogin:               (_) => const LoginScreen(),
         routePatientDashboard:    (_) => const PatientDashboardScreen(),
-        routePatientDashboardAlt: (_) => const PatientDashboardScreen(), // same screen, two paths
-        // routeCaregiverDashboard: (_) => const CaregiverDashboardScreen(),
+        routePatientDashboardAlt: (_) => const PatientDashboardScreen(),
+        routeCaregiverDashboard:  (_) => const CaregiverDashboardScreen(),
       };
 
   @override

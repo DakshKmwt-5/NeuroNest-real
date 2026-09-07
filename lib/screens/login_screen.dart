@@ -71,16 +71,9 @@ class _LoginScreenState extends State<LoginScreen>
     if (_formKey.currentState?.validate() ?? false) {
       debugPrint('Login as ${isPatient ? 'Patient' : 'Caregiver'}');
       if (isPatient) {
-        // Navigate to the patient dashboard.
         Navigator.of(context).pushReplacementNamed('/patient_dashboard');
       } else {
-        // TODO: implement CaregiverDashboardScreen and replace this.
-        debugPrint('Caregiver dashboard not yet implemented — coming soon!');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Caregiver dashboard coming soon!'),
-          ),
-        );
+        Navigator.of(context).pushReplacementNamed('/caregiver_dashboard');
       }
     }
   }
