@@ -6,13 +6,19 @@ import 'package:neuronest/screens/login_screen.dart';
 import 'package:neuronest/screens/onboarding_screen.dart';
 import 'package:neuronest/screens/patient_dashboard_screen.dart';
 import 'package:neuronest/theme/app_theme.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Entry point
 // ──────────────────────────────────────────────────────────────────────────────
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase init failed (likely missing web config): $e');
+  }
 
   // Lock to portrait while the UI layer is being built out.
   SystemChrome.setPreferredOrientations([

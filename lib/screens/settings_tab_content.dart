@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:neuronest/screens/caregiver_profile_screen.dart';
+import 'package:neuronest/screens/settings_support_screens.dart';
 import 'package:neuronest/theme/app_theme.dart';
 
 /// Settings tab for the Caregiver Dashboard.
@@ -86,8 +87,11 @@ class SettingsTabContent extends StatelessWidget {
           icon: Icons.record_voice_over_rounded,
           title: 'Language & Voice',
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Language & Voice settings tapped')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const LanguageVoiceScreen(),
+              ),
             );
           },
         ),
@@ -96,8 +100,11 @@ class SettingsTabContent extends StatelessWidget {
           title: 'Accessibility',
           subtitle: 'Text size, theme',
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Accessibility settings tapped')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const AccessibilityScreen(),
+              ),
             );
           },
         ),
@@ -105,8 +112,11 @@ class SettingsTabContent extends StatelessWidget {
           icon: Icons.person_outline_rounded,
           title: "Patient's Profile",
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Patient's Profile tapped")),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const EditPatientProfileScreen(),
+              ),
             );
           },
         ),
@@ -129,9 +139,7 @@ class SettingsTabContent extends StatelessWidget {
           textColor: const Color(0xFFD32F2F),
           showChevron: false,
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Logged out')),
-            );
+            Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
           },
         ),
       ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:neuronest/screens/settings_support_screens.dart';
 import 'package:neuronest/theme/app_theme.dart';
 
 /// Help & Support tab for the Caregiver Dashboard.
@@ -70,8 +71,11 @@ class HelpSupportTabContent extends StatelessWidget {
           icon: Icons.help_outline_rounded,
           title: 'FAQs',
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('FAQs tapped')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const FaqScreen(),
+              ),
             );
           },
         ),
@@ -79,8 +83,14 @@ class HelpSupportTabContent extends StatelessWidget {
           icon: Icons.support_agent_rounded,
           title: 'Contact Support',
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Contact Support tapped')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ContactReportScreen(
+                  title: 'Contact Support',
+                  defaultIssueType: 'General Question',
+                ),
+              ),
             );
           },
         ),
@@ -88,8 +98,14 @@ class HelpSupportTabContent extends StatelessWidget {
           icon: Icons.report_problem_rounded,
           title: 'Report an Issue',
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Report an Issue tapped')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ContactReportScreen(
+                  title: 'Report an Issue',
+                  defaultIssueType: 'Technical Problem / Bug',
+                ),
+              ),
             );
           },
         ),
@@ -97,8 +113,11 @@ class HelpSupportTabContent extends StatelessWidget {
           icon: Icons.security_rounded,
           title: 'Privacy & Security',
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Privacy & Security tapped')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const PrivacySecurityScreen(),
+              ),
             );
           },
         ),

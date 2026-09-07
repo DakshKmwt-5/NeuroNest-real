@@ -6,6 +6,7 @@ import 'package:neuronest/screens/help_support_tab_content.dart';
 import 'package:neuronest/screens/overview_tab_content.dart';
 import 'package:neuronest/screens/reminder_tab_content.dart';
 import 'package:neuronest/screens/settings_tab_content.dart';
+import 'package:neuronest/services/alert_service.dart';
 import 'package:neuronest/theme/app_theme.dart';
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -32,6 +33,9 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
   // ── State ──────────────────────────────────────────────────────────────────
   int _selectedIndex = 0;
 
+  // ── Services ───────────────────────────────────────────────────────────────
+  final AlertService _alertService = AlertService();
+
   // ── Entrance animation ─────────────────────────────────────────────────────
   late final AnimationController _anim;
   late final Animation<double>   _fadeIn;
@@ -47,11 +51,16 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
       begin: const Offset(0, 0.04),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _anim, curve: Curves.easeOut));
-    WidgetsBinding.instance.addPostFrameCallback((_) => _anim.forward());
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _anim.forward();
+      _alertService.listenForEmergencies(context);
+    });
   }
 
   @override
   void dispose() {
+    _alertService.dispose();
     _anim.dispose();
     super.dispose();
   }

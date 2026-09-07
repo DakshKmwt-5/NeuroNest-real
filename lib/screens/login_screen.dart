@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:neuronest/screens/signup_screen.dart';
 import 'package:neuronest/theme/app_theme.dart';
 import 'package:neuronest/widgets/widgets.dart';
 
@@ -208,6 +209,28 @@ class _LoginScreenState extends State<LoginScreen>
                           onPressed: _onLogin,
                           semanticLabel:
                               'Login as ${isPatient ? 'Patient' : 'Caregiver'}',
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // ── Sign Up Navigation ────────────────────────────────
+                        Center(
+                          child: TextButton(
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SignUpScreen(),
+                              ),
+                            ),
+                            child: Text(
+                              "Don't have an account? Create one",
+                              style: GoogleFonts.baloo2(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
