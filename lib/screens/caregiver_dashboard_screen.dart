@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:neuronest/screens/activity_tab_content.dart';
 import 'package:neuronest/screens/caregiver_profile_screen.dart';
+import 'package:neuronest/screens/help_support_tab_content.dart';
+import 'package:neuronest/screens/overview_tab_content.dart';
+import 'package:neuronest/screens/reminder_tab_content.dart';
+import 'package:neuronest/screens/settings_tab_content.dart';
 import 'package:neuronest/theme/app_theme.dart';
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -12,7 +17,7 @@ import 'package:neuronest/theme/app_theme.dart';
 /// Layout:
 ///   • [Scaffold] with [AppColors.background]
 ///   • Header row: notification bell | "Caregiver Hub" title | avatar
-///   • [Expanded] body showing a placeholder for the active tab
+///   • [Expanded] body showing active tab content
 ///   • Custom 5-tab [_CaregiverBottomNavBar]
 class CaregiverDashboardScreen extends StatefulWidget {
   const CaregiverDashboardScreen({super.key});
@@ -75,10 +80,25 @@ class _CaregiverDashboardScreenState extends State<CaregiverDashboardScreen>
                       opacity: anim,
                       child: child,
                     ),
-                    child: _TabContent(
-                      key: ValueKey(_selectedIndex),
-                      index: _selectedIndex,
-                    ),
+                    child: _selectedIndex == 0
+                        ? const OverviewTabContent(
+                            key: ValueKey('overview'),
+                          )
+                        : _selectedIndex == 1
+                            ? const ActivityTabContent(
+                                key: ValueKey('activity'),
+                              )
+                            : _selectedIndex == 2
+                                ? const ReminderTabContent(
+                                    key: ValueKey('reminder'),
+                                  )
+                                : _selectedIndex == 3
+                                    ? const SettingsTabContent(
+                                        key: ValueKey('settings'),
+                                      )
+                                    : const HelpSupportTabContent(
+                                        key: ValueKey('help_support'),
+                                      ),
                   ),
                 ),
               ],
@@ -204,82 +224,6 @@ class _CaregiverHeader extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// _TabContent  – placeholder body for the active tab
-// ──────────────────────────────────────────────────────────────────────────────
-
-class _TabContent extends StatelessWidget {
-  const _TabContent({super.key, required this.index});
-  final int index;
-
-  static const _labels = [
-    'Overview',
-    'Activity',
-    'Reminder',
-    'Setting',
-    'Help & Support',
-  ];
-
-  static const _icons = [
-    Icons.dashboard_rounded,
-    Icons.insights_rounded,
-    Icons.edit_calendar_rounded,
-    Icons.settings_rounded,
-    Icons.help_outline_rounded,
-  ];
-
-  static const _colors = [
-    AppColors.primarySurface,
-    AppColors.accent,
-    AppColors.highlight,
-    Color(0xFFD4EDDA),
-    Color(0xFFF5E6FA),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Illustrated icon container
-          Container(
-            width: 88,
-            height: 88,
-            decoration: BoxDecoration(
-              color: _colors[index],
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: AppColors.outline, width: 1),
-            ),
-            child: Icon(
-              _icons[index],
-              size: 42,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Content for Tab $index',
-            style: GoogleFonts.baloo2(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: AppColors.text,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${_labels[index]} view — coming soon',
-            style: GoogleFonts.baloo2(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
 // _CaregiverBottomNavBar  – custom 5-tab navigation bar
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -312,6 +256,7 @@ class _CaregiverBottomNavBar extends StatelessWidget {
     final bottomPad = MediaQuery.paddingOf(context).bottom;
 
     return Container(
+      padding: EdgeInsets.only(bottom: bottomPad),
       decoration: BoxDecoration(
         color: AppColors.surface,  // white / Background surface
         border: const Border(
@@ -345,14 +290,10 @@ class _CaregiverBottomNavBar extends StatelessWidget {
                 label: tab.label,
                 child: InkWell(
                   onTap: () => onTap(i),
-                  borderRadius: BorderRadius.circular(12),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeInOut,
-                    constraints: const BoxConstraints(
-                      minWidth: kMinTouchTarget,
-                      minHeight: kMinTouchTarget,
-                    ),
+                  borderRadius: BorderRadius.circular(16),
+                  splashColor: AppColors.primary.withAlpha(20),
+                  highlightColor: AppColors.primary.withAlpha(10),
+                  child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 6, vertical: 6),
                     decoration: BoxDecoration(
@@ -402,7 +343,6 @@ class _CaregiverBottomNavBar extends StatelessWidget {
           ),
         ),
       ),
-      padding: EdgeInsets.only(bottom: bottomPad),
     );
   }
 }
